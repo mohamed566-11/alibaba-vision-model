@@ -1,0 +1,6 @@
+{
+  "name": "Alta Garment Extractor",
+  "description": "Professional AI clothing extraction and garment isolation tool.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
