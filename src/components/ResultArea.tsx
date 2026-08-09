@@ -110,7 +110,7 @@ export function ResultArea({
 
       {/* Full combined image + compare */}
       <div className="w-full bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm">
-        <div className="w-full h-[480px] bg-zinc-50 relative group overflow-hidden">
+        <div className="w-full bg-zinc-50 relative group overflow-hidden" style={{ minHeight: '480px', maxHeight: '680px', height: 'clamp(480px, 55vw, 680px)' }}>
           <AnimatePresence mode="wait">
             {showComparison && originalImage ? (
               <motion.div key="cmp" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0">
@@ -152,7 +152,10 @@ export function ResultArea({
             </p>
           </div>
 
-          <div className={`grid gap-3 ${itemResults.length === 1 ? 'grid-cols-1' : itemResults.length === 2 ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3'}`}>
+          <div className={`grid gap-4 ${
+            itemResults.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' :
+            'grid-cols-2'
+          }`}>
             {itemResults.map((result, idx) => {
               const isSaved = savedGarments.some(sg => sg.imageUrl === result.image_url);
 
@@ -180,8 +183,8 @@ export function ResultArea({
                   transition={{ delay: idx * 0.06 }}
                   className="flex flex-col bg-white rounded-xl border border-zinc-200 overflow-hidden shadow-2xs hover:shadow-md hover:border-zinc-300 transition-all"
                 >
-                  <div className="w-full aspect-square bg-zinc-50 relative group overflow-hidden">
-                    <img src={result.image_url} alt={result.item.description} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
+                  <div className="w-full bg-zinc-50 relative group overflow-hidden" style={{ aspectRatio: '4/5' }}>
+                    <img src={result.image_url} alt={result.item.description} className="w-full h-full object-contain p-2 group-hover:scale-[1.04] transition-transform duration-300" />
                     <button onClick={() => window.open(result.image_url, '_blank')} className="absolute top-2 right-2 p-1.5 bg-white/90 hover:bg-white rounded-full shadow text-zinc-600 opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
                       <Maximize2 className="w-3 h-3" />
                     </button>

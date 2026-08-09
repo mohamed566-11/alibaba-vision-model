@@ -77,6 +77,8 @@ export interface GenerationHistoryItem {
   verified?: boolean;
 }
 
+export type ActiveTab = 'extractor' | 'tryon';
+
 export interface ExtractionResponse {
   success: boolean;
   image_url?: string;
@@ -87,3 +89,10 @@ export interface ExtractionResponse {
   attempts?: number;
   message?: string;
 }
+
+export interface TryOnResponse {
+  success: boolean;
+  image_url?: string;
+  message?: string;
+}
+

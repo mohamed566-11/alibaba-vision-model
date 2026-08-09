@@ -23,13 +23,13 @@ export function SavedCloset({ items, onRemove }: SavedClosetProps) {
         {items.map(item => (
           <div 
             key={item.id}
-            className="group relative bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-lg hover:border-zinc-300 transition-all duration-300"
+            className="group relative bg-white rounded-2xl border border-zinc-200 overflow-hidden shadow-sm hover:shadow-xl hover:border-zinc-300 hover:-translate-y-1 transition-all duration-300"
           >
-            <div className="w-full h-72 relative bg-zinc-50 overflow-hidden">
+            <div className="w-full relative bg-zinc-50 overflow-hidden" style={{ height: 'clamp(280px, 30vw, 420px)' }}>
               <img 
                 src={item.imageUrl} 
                 alt={item.description} 
-                className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+                className="w-full h-full object-contain p-2 group-hover:scale-[1.04] transition-transform duration-300"
               />
               <a 
                 href={item.imageUrl} 

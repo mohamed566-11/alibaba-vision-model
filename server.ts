@@ -8,6 +8,7 @@ import * as dotenv from 'dotenv';
 import { GarmentAnalysisService, GarmentInventory } from './server/services/GarmentAnalysisService';
 import { GarmentExtractionPipeline } from './server/services/GarmentExtractionPipeline';
 import { QwenImageEditService } from './server/services/QwenImageEditService';
+import { GarmentTryOnService, GarmentInput } from './server/services/GarmentTryOnService';
 
 dotenv.config();
 dotenv.config({ path: '.env.example' });
@@ -111,6 +112,88 @@ app.post('/api/garment/extract', (req, res, next) => {
   } catch (error: any) {
     console.error('Garment extraction error:', error);
     res.status(500).json({ success: false, message: error.message || 'Extraction failed.' });
+  }
+});
+
+// Route 3: Multi-garment Virtual Try-On (Dress model in selected outfit)
+app.post('/api/garment/tryon', (req, res, next) => {
+  upload.single('person_image')(req, res, (err) => {
+    if (err) return res.status(400).json({ success: false, message: err.message });
+    next();
+  });
+}, async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, message: 'No model/person image uploaded' });
+
+    const apiKey = getDashscopeKey(res);
+    if (!apiKey) return;
+
+    let selectedGarments: Array<{ id: string; category: string; description: string; color: string; imageUrl: string }> = [];
+    if (req.body.selected_garments) {
+      try {
+        selectedGarments = typeof req.body.selected_garments === 'string'
+          ? JSON.parse(req.body.selected_garments)
+          : req.body.selected_garments;
+      } catch (e) {
+        return res.status(400).json({ success: false, message: 'Invalid selected_garments JSON format' });
+      }
+    }
+
+    if (!selectedGarments || selectedGarments.length === 0) {
+      return res.status(400).json({ success: false, message: 'Please select at least 1 garment from your closet to try on.' });
+    }
+
+    console.log(`[Server] Processing Try-On with ${selectedGarments.length} garment(s)...`);
+
+    // Resolve local file paths for each selected garment
+    const garmentInputs: GarmentInput[] = [];
+
+    for (const g of selectedGarments) {
+      let garmentPath = '';
+      if (g.imageUrl.startsWith('/uploads/')) {
+        garmentPath = path.join(process.cwd(), g.imageUrl.replace(/^\//, ''));
+      } else if (g.imageUrl.startsWith('data:image')) {
+        // Save base64 to temp file
+        const base64Data = g.imageUrl.replace(/^data:image\/\w+;base64,/, '');
+        const tempFilename = `temp_garment_${uuidv4()}.png`;
+        garmentPath = path.join(uploadsDir, tempFilename);
+        fs.writeFileSync(garmentPath, Buffer.from(base64Data, 'base64'));
+      } else if (fs.existsSync(g.imageUrl)) {
+        garmentPath = g.imageUrl;
+      }
+
+      if (garmentPath && fs.existsSync(garmentPath)) {
+        garmentInputs.push({
+          imagePath: garmentPath,
+          description: g.description || g.category || 'Garment item',
+          category: g.category || 'garment',
+          color: g.color
+        });
+      } else {
+        console.warn(`[Server] Garment image not found on disk: ${g.imageUrl}`);
+      }
+    }
+
+    if (garmentInputs.length === 0) {
+      return res.status(400).json({ success: false, message: 'Could not locate selected garment images on server.' });
+    }
+
+    const tryOnResult = await GarmentTryOnService.executeTryOn(
+      req.file.path,
+      garmentInputs,
+      apiKey,
+      generatedDir
+    );
+
+    res.json({
+      success: true,
+      image_url: tryOnResult.publicUrl,
+      message: 'Virtual try-on completed successfully!'
+    });
+
+  } catch (error: any) {
+    console.error('Virtual try-on error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Virtual try-on failed.' });
   }
 });
 

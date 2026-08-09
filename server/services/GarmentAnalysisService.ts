@@ -27,7 +27,7 @@ Return ONLY valid JSON, no markdown:
 {"gender_presentation":"male"|"female"|"neutral","items":[{"category":"shirt","description":"white button-up shirt","color":"white","visible":true}]}`;
 
     const reqBody = {
-      model: "qwen-vl-max",
+      model: "qwen3-vl-30b-a3b-instruct",
       input: {
         messages: [
           {

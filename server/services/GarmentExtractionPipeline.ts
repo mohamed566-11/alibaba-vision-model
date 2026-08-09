@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import { GarmentAnalysisService, GarmentInventory, GarmentItem } from './GarmentAnalysisService';
 import { GarmentPromptBuilder, getLayoutForItems, getOutputSize } from './GarmentPromptBuilder';
 import { QwenImageEditService } from './QwenImageEditService';
+import { SmartCropService } from './SmartCropService';
 
 export interface ExtractedItemResult {
   item: GarmentItem;
@@ -94,7 +95,25 @@ export class GarmentExtractionPipeline {
     const elapsed = Math.round((Date.now() - startTime) / 1000);
     console.log(`[Pipeline] Done in ${elapsed}s (attempt ${attempts}).`);
 
-    // 5. Crop + trim per-item sections locally using Sharp (ZERO extra API calls)
+    // 5a. Trim outer whitespace from the combined image so items fill the main display view
+    //     This doesn't affect per-item crops — only the full preview shown to the user.
+    try {
+      const combinedBuf = await sharp(result.localPath)
+        .trim({ background: '#FFFFFF', threshold: 15 })
+        .png()
+        .toBuffer();
+      await sharp(combinedBuf).toFile(result.localPath);
+      console.log('[Pipeline] Combined image trimmed for display.');
+    } catch (trimErr: any) {
+      console.warn('[Pipeline] Combined image trim skipped:', trimErr.message);
+    }
+
+    // 5b. Remove any AI-generated separator lines / dividers from the combined image.
+    //     Scans for thin dark columns (≥60% dark pixels, ≤12px wide) and paints them white.
+    //     Runs in ~5ms on CPU. Zero API calls. Guarantees clean crops every time.
+    await SmartCropService.removeArtifactLines(result.localPath);
+
+    // 5c. Crop + trim per-item sections locally using Sharp (ZERO extra API calls)
     const itemResults = await this.cropItemsFromImage(
       result.localPath,
       result.publicUrl,
@@ -114,9 +133,16 @@ export class GarmentExtractionPipeline {
   }
 
   /**
-   * Crops the combined grid image into N individual item images.
-   * Uses predictable grid math — no AI involved, pure Sharp geometry.
-   * Cost: ~1ms per item, purely local CPU.
+   * Content-aware crop: splits the combined grid image into individual item images.
+   *
+   * Steps per item:
+   *   1. SmartCropService detects actual whitespace separator positions (not guessed math)
+   *   2. Extract each grid cell using the detected boundaries
+   *   3. Trim remaining internal whitespace via Sharp
+   *   4. Pad to a clean square canvas for consistent card display
+   *
+   * Supports grids up to 6 items. Falls back to equal math division if detection fails.
+   * Cost: ~5-15ms CPU, zero API calls.
    */
   private static async cropItemsFromImage(
     fullImagePath: string,
@@ -124,98 +150,91 @@ export class GarmentExtractionPipeline {
     items: GarmentItem[],
     generatedDir: string
   ): Promise<ExtractedItemResult[]> {
-
     const count = items.length;
 
-    // Single item — no cropping needed, just return the full image
+    // Single item — return full image directly (no crop needed)
     if (count === 1) {
+      // Still trim + pad the single item for consistent display
+      const trimmed = await SmartCropService.trimAndPad(fullImagePath);
+      const filename = `crop_0_${path.basename(fullImagePath)}`;
+      const outPath = path.join(generatedDir, filename);
+      await trimmed.toFile(outPath);
       return [{
         item: items[0],
-        image_url: fullImagePublicUrl,
+        image_url: `/uploads/generated/${filename}`,
         verified: true,
-        verification_reason: 'Single item — full image'
+        verification_reason: 'Single item — trimmed & padded'
       }];
     }
 
     const layout = getLayoutForItems(count);
     const { cols, rows } = layout;
 
-    // Get output image dimensions
-    const metadata = await sharp(fullImagePath).metadata();
-    const imgW = metadata.width || 512;
-    const imgH = metadata.height || 512;
+    // Read dimensions
+    const meta = await sharp(fullImagePath).metadata();
+    const imgW = meta.width ?? 512;
+    const imgH = meta.height ?? 512;
 
-    const cellW = Math.floor(imgW / cols);
-    const cellH = Math.floor(imgH / rows);
+    console.log(`[Pipeline] SmartCrop: ${count} items | ${cols}×${rows} grid | ${imgW}×${imgH}px image`);
 
-    console.log(`[Pipeline] Cropping ${count} items from ${imgW}×${imgH} image using ${cols}×${rows} grid (${cellW}×${cellH} per cell)...`);
+    // Run content-aware separator detection (single-pass pixel analysis ~5-15ms)
+    const boundaries = await SmartCropService.detect(fullImagePath, cols, rows);
 
     const results: ExtractedItemResult[] = [];
 
-    for (let idx = 0; idx < items.length; idx++) {
-      const item = items[idx];
+    // Process all crops in parallel for speed
+    const cropTasks = items.map(async (item, idx) => {
       const col = idx % cols;
       const row = Math.floor(idx / cols);
 
-      const left = col * cellW;
-      const top = row * cellH;
-      const width = col === cols - 1 ? imgW - left : cellW; // Last col gets remainder
-      const height = row === rows - 1 ? imgH - top : cellH;  // Last row gets remainder
+      const { start: left, size: width }  = SmartCropService.cellRange(boundaries.colCuts, imgW, col);
+      const { start: top,  size: height } = SmartCropService.cellRange(boundaries.rowCuts, imgH, row);
 
       const cropFilename = `crop_${idx}_${path.basename(fullImagePath)}`;
       const cropPath = path.join(generatedDir, cropFilename);
 
       try {
-        // Step 1: Crop the grid cell
+        // 1. Crop cell using smart boundaries.
+        //    Safe margin: trim 10px inward from each shared edge to eliminate any
+        //    separator line/shadow artifact left by the model at cell boundaries.
+        const SAFE_MARGIN = 10;
+        const safeLeft   = left   + (col > 0              ? SAFE_MARGIN : 0);
+        const safeTop    = top    + (row > 0              ? SAFE_MARGIN : 0);
+        const safeRight  = (left + width)  - (col < cols - 1 ? SAFE_MARGIN : 0);
+        const safeBottom = (top  + height) - (row < rows - 1 ? SAFE_MARGIN : 0);
+        const safeW = Math.max(safeRight  - safeLeft, 1);
+        const safeH = Math.max(safeBottom - safeTop,  1);
+
         const cropBuffer = await sharp(fullImagePath)
-          .extract({ left, top, width, height })
+          .extract({ left: safeLeft, top: safeTop, width: safeW, height: safeH })
           .png()
           .toBuffer();
 
-        // Step 2: Trim whitespace around the garment so it fills the card
-        // threshold: pixels within 30 of white (RGB 225+) are trimmed
-        const trimmedBuffer = await sharp(cropBuffer)
-          .trim({ background: '#FFFFFF', threshold: 30 })
-          .png()
-          .toBuffer();
+        // 2. Trim whitespace + 3. Pad to square — combined in one helper
+        await (await SmartCropService.trimAndPadBuffer(cropBuffer)).toFile(cropPath);
 
-        // Step 3: Embed in a square canvas with small padding for clean display
-        const trimMeta = await sharp(trimmedBuffer).metadata();
-        const trimW = trimMeta.width || 400;
-        const trimH = trimMeta.height || 400;
-        const squareSize = Math.max(trimW, trimH) + 60; // 30px padding each side
+        console.log(`[Pipeline] ✓ ${boundaries.method === 'smart' ? '🎯' : '📐'} ${item.category} [r${row + 1}c${col + 1}] → ${cropFilename}`);
 
-        await sharp(trimmedBuffer)
-          .extend({
-            top:    Math.floor((squareSize - trimH) / 2),
-            bottom: Math.ceil((squareSize - trimH) / 2),
-            left:   Math.floor((squareSize - trimW) / 2),
-            right:  Math.ceil((squareSize - trimW) / 2),
-            background: { r: 255, g: 255, b: 255, alpha: 1 }
-          })
-          .png()
-          .toFile(cropPath);
-
-        results.push({
+        return {
           item,
           image_url: `/uploads/generated/${cropFilename}`,
           verified: true,
-          verification_reason: `Cropped from grid [row ${row + 1}, col ${col + 1}]`
-        });
-
-        console.log(`[Pipeline] ✓ Cropped & trimmed: ${item.category} → ${cropFilename}`);
+          verification_reason: `${boundaries.method === 'smart' ? 'Smart' : 'Fallback'} crop [row ${row + 1}, col ${col + 1}]`
+        } as ExtractedItemResult;
 
       } catch (cropErr: any) {
         console.error(`[Pipeline] ✗ Crop failed for ${item.category}:`, cropErr.message);
-        // Fallback: use full image if crop fails
-        results.push({
+        return {
           item,
           image_url: fullImagePublicUrl,
           verified: true,
-          verification_reason: 'Crop failed — full image used'
-        });
+          verification_reason: 'Crop error — full image used'
+        } as ExtractedItemResult;
       }
-    }
+    });
+
+    const settled = await Promise.all(cropTasks);
+    results.push(...settled);
 
     return results;
   }

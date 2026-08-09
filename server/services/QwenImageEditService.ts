@@ -29,7 +29,7 @@ export class QwenImageEditService {
   }
 
   /**
-   * Calls qwen-image-edit-plus to extract a SINGLE garment item.
+   * Calls qwen-image-edit-plus to extract garment items.
    * Implements auto-retry on 429 Rate Limit with exponential backoff.
    */
   public static async executeExtraction(
@@ -42,7 +42,7 @@ export class QwenImageEditService {
   ): Promise<{ localPath: string; publicUrl: string; generatedFilename: string }> {
     
     const reqBody = {
-      model: "qwen-image-edit-plus",
+      model: "qwen-image-edit",
       input: {
         messages: [
           {
