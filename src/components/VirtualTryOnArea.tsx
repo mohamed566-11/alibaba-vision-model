@@ -24,13 +24,15 @@ export function VirtualTryOnArea({ savedGarments, onSwitchToExtractor }: Virtual
   const customGarmentInputRef = useRef<HTMLInputElement>(null);
 
   // Execution & Result state
-  const [isLoading, setIsLoading] = useState(false);
-  const [elapsedSecs, setElapsedSecs] = useState(0);
-  const [resultImage, setResultImage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading]         = useState(false);
+  const [elapsedSecs, setElapsedSecs]     = useState(0);
+  const [resultImage, setResultImage]     = useState<string | null>(null);
+  const [error, setError]                 = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [modelUsed, setModelUsed]         = useState<string | null>(null);
 
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef            = useRef<ReturnType<typeof setInterval> | null>(null);
+  const abortControllerRef  = useRef<AbortController | null>(null);
 
   // Toggle selection of saved closet item
   const toggleGarmentSelection = (id: string) => {
@@ -72,10 +74,7 @@ export function VirtualTryOnArea({ savedGarments, onSwitchToExtractor }: Virtual
     }
 
     // Combine selected saved garments + selected custom garments
-    const allAvailable = [
-      ...savedGarments,
-      ...customGarments
-    ];
+    const allAvailable = [...savedGarments, ...customGarments];
     const selected = allAvailable.filter(g => selectedGarmentIds.includes(g.id));
 
     if (selected.length === 0) {
@@ -83,9 +82,14 @@ export function VirtualTryOnArea({ savedGarments, onSwitchToExtractor }: Virtual
       return;
     }
 
+    // Setup AbortController for cancel support
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     setIsLoading(true);
     setError(null);
     setResultImage(null);
+    setModelUsed(null);
     setElapsedSecs(0);
 
     timerRef.current = setInterval(() => setElapsedSecs(s => s + 1), 1000);
@@ -97,7 +101,8 @@ export function VirtualTryOnArea({ savedGarments, onSwitchToExtractor }: Virtual
 
       const res = await fetch('/api/garment/tryon', {
         method: 'POST',
-        body: formData
+        body: formData,
+        signal: abortController.signal
       });
 
       const data = await res.json();
@@ -106,14 +111,24 @@ export function VirtualTryOnArea({ savedGarments, onSwitchToExtractor }: Virtual
       }
 
       setResultImage(data.image_url);
+      if (data.model_used) setModelUsed(data.model_used);
 
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'An error occurred during virtual try-on.');
+      if (err.name === 'AbortError') {
+        setError('Try-on cancelled.');
+      } else {
+        console.error(err);
+        setError(err.message || 'An error occurred during virtual try-on.');
+      }
     } finally {
       if (timerRef.current) clearInterval(timerRef.current);
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
+  };
+
+  const handleCancel = () => {
+    abortControllerRef.current?.abort();
   };
 
   const handleDownload = () => {
@@ -291,24 +306,36 @@ export function VirtualTryOnArea({ savedGarments, onSwitchToExtractor }: Virtual
           </div>
         )}
 
-        {/* Execute Try-On Button */}
-        <button
-          onClick={handleTryOn}
-          disabled={!personFile || selectedCount === 0 || isLoading}
-          className="w-full py-4 px-6 bg-zinc-900 hover:bg-zinc-800 active:scale-[0.98] active:bg-black disabled:bg-zinc-200 disabled:text-zinc-400 disabled:transform-none text-white font-semibold rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer"
-        >
-          {isLoading ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              <span>Dressing Model… <span className="font-mono tabular-nums text-white/70">{elapsedSecs}s</span></span>
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-5 h-5 text-amber-300 group-hover:rotate-12 transition-transform" />
-              <span>✨ Fit Outfit on Model (تطبيق المظهر)</span>
-            </>
+        {/* Execute Try-On Button + Cancel */}
+        <div className="flex gap-2">
+          <button
+            onClick={handleTryOn}
+            disabled={!personFile || selectedCount === 0 || isLoading}
+            className="flex-1 py-4 px-6 bg-zinc-900 hover:bg-zinc-800 active:scale-[0.98] active:bg-black disabled:bg-zinc-200 disabled:text-zinc-400 disabled:transform-none text-white font-semibold rounded-xl shadow-sm hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 group cursor-pointer"
+          >
+            {isLoading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                <span>Dressing Model… <span className="font-mono tabular-nums text-white/70">{elapsedSecs}s</span></span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-5 h-5 text-amber-300 group-hover:rotate-12 transition-transform" />
+                <span>✨ Fit Outfit on Model</span>
+              </>
+            )}
+          </button>
+
+          {isLoading && (
+            <button
+              onClick={handleCancel}
+              className="px-4 py-4 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-semibold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer text-sm"
+            >
+              <X className="w-4 h-4" />
+              Cancel
+            </button>
           )}
-        </button>
+        </div>
 
       </div>
 
@@ -319,6 +346,11 @@ export function VirtualTryOnArea({ savedGarments, onSwitchToExtractor }: Virtual
             <div className="flex items-center gap-2">
               <Sparkles className="w-4.5 h-4.5 text-amber-500" />
               <h3 className="text-sm font-bold text-zinc-900">Virtual Try-On Result</h3>
+              {modelUsed && (
+                <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100">
+                  {modelUsed}
+                </span>
+              )}
             </div>
             {resultImage && personPreview && (
               <button 

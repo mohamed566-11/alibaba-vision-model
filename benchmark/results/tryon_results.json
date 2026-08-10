@@ -1,0 +1,977 @@
+[
+  {
+    "model": "qwen-image-edit-plus",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 15912,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 13155,
+        "outputFile": "qwen-image-edit-plus_g1.png",
+        "outputSizeKB": 321
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 18669,
+        "outputFile": "qwen-image-edit-plus_g2.png",
+        "outputSizeKB": 659
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 3868,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"f90565b2-fe7d-99fc-be45-d1dfb6c2006d\",\"code\":\"InvalidParameter\",\"message\":\"For image editing, the message must contain 1~3 image content items. Got 4 image items.\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-2.0-pro",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 30927,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 29194,
+        "outputFile": "qwen-image-2.0-pro_g1.png",
+        "outputSizeKB": 1106
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 32660,
+        "outputFile": "qwen-image-2.0-pro_g2.png",
+        "outputSizeKB": 1128
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 3302,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"93808231-4d72-9a0c-a67f-7d524ecc626a\",\"code\":\"InvalidParameter\",\"message\":\"Model 'qwen-image-2.0-2in1' supports 0~3 image content items. Got 4 image items. (0 images = T2I mode, 1~3 images = I2I mode)\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-2.0-pro-2026-03-03",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 27103,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 23088,
+        "outputFile": "qwen-image-2.0-pro-2026-03-03_g1.png",
+        "outputSizeKB": 1100
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 31117,
+        "outputFile": "qwen-image-2.0-pro-2026-03-03_g2.png",
+        "outputSizeKB": 1126
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 4512,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"f858e926-e025-9456-b69d-ccd521d677f5\",\"code\":\"InvalidParameter\",\"message\":\"Model 'qwen-image-2.0-2in1' supports 0~3 image content items. Got 4 image items. (0 images = T2I mode, 1~3 images = I2I mode)\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-2.0-2026-03-03",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 7672,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 6363,
+        "outputFile": "qwen-image-2.0-2026-03-03_g1.png",
+        "outputSizeKB": 1139
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 8980,
+        "outputFile": "qwen-image-2.0-2026-03-03_g2.png",
+        "outputSizeKB": 1141
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 4308,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"4ae72cee-55e0-966e-abaa-26ef7d34e429\",\"code\":\"InvalidParameter\",\"message\":\"Model 'qwen-image-2.0-2in1' supports 0~3 image content items. Got 4 image items. (0 images = T2I mode, 1~3 images = I2I mode)\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-2.0-pro-2026-06-22",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 26366,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 22156,
+        "outputFile": "qwen-image-2.0-pro-2026-06-22_g1.png",
+        "outputSizeKB": 399
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 30575,
+        "outputFile": "qwen-image-2.0-pro-2026-06-22_g2.png",
+        "outputSizeKB": 428
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 2193,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"a10f706e-4f5c-9c2e-8119-ebb6c1a88c95\",\"code\":\"InvalidParameter\",\"message\":\"Model 'qwen-image-2.0-2in1' supports 0~3 image content items. Got 4 image items. (0 images = T2I mode, 1~3 images = I2I mode)\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-2.0-pro-2026-04-22",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 22158,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 13306,
+        "outputFile": "qwen-image-2.0-pro-2026-04-22_g1.png",
+        "outputSizeKB": 1099
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 31010,
+        "outputFile": "qwen-image-2.0-pro-2026-04-22_g2.png",
+        "outputSizeKB": 1129
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 4199,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"9000b0c4-5d15-9b0b-9792-e6d3672d9dba\",\"code\":\"InvalidParameter\",\"message\":\"Model 'qwen-image-2.0-2in1' supports 0~3 image content items. Got 4 image items. (0 images = T2I mode, 1~3 images = I2I mode)\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-edit-max",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 43490,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 35975,
+        "outputFile": "qwen-image-edit-max_g1.png",
+        "outputSizeKB": 573
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 51004,
+        "outputFile": "qwen-image-edit-max_g2.png",
+        "outputSizeKB": 689
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 4710,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"184dd74b-9706-9bb5-a2f2-68fa14dddb53\",\"code\":\"InvalidParameter\",\"message\":\"For image editing, the message must contain 1~3 image content items. Got 4 image items.\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-edit",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 30798,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 25797,
+        "outputFile": "qwen-image-edit_g1.png",
+        "outputSizeKB": 782
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 35798,
+        "outputFile": "qwen-image-edit_g2.png",
+        "outputSizeKB": 763
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 4502,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"c2bbc323-fc27-97b0-9491-8b1ea95ee11e\",\"code\":\"InvalidParameter\",\"message\":\"input image count must be between 1 and 3, got 4\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-edit-plus-2025-10-30",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 16558,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 11811,
+        "outputFile": "qwen-image-edit-plus-2025-10-30_g1.png",
+        "outputSizeKB": 199
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 21304,
+        "outputFile": "qwen-image-edit-plus-2025-10-30_g2.png",
+        "outputSizeKB": 654
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 5354,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"0ea31f66-0f08-9d4d-ac2d-665f76d6d349\",\"code\":\"InvalidParameter\",\"message\":\"For image editing, the message must contain 1~3 image content items. Got 4 image items.\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-edit-plus-2025-12-15",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 10913,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 9081,
+        "outputFile": "qwen-image-edit-plus-2025-12-15_g1.png",
+        "outputSizeKB": 789
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 12744,
+        "outputFile": "qwen-image-edit-plus-2025-12-15_g2.png",
+        "outputSizeKB": 361
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 6524,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"49217ec2-b6a9-928b-8b11-654fd659cf85\",\"code\":\"InvalidParameter\",\"message\":\"For image editing, the message must contain 1~3 image content items. Got 4 image items.\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-edit-max-2026-01-16",
+    "group": "edit",
+    "status": "partial",
+    "maxGarmentsAccepted": 2,
+    "avgElapsedMs": 47645,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 45780,
+        "outputFile": "qwen-image-edit-max-2026-01-16_g1.png",
+        "outputSizeKB": 784
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 49510,
+        "outputFile": "qwen-image-edit-max-2026-01-16_g2.png",
+        "outputSizeKB": 1026
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 3351,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"a986c3d0-bd83-9672-8725-09854f740330\",\"code\":\"InvalidParameter\",\"message\":\"For image editing, the message must contain 1~3 image content items. Got 4 image items.\"}"
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-3.0-pro",
+    "group": "gen",
+    "status": "partial",
+    "maxGarmentsAccepted": 1,
+    "avgElapsedMs": 80846,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 80846,
+        "outputFile": "qwen-image-3.0-pro_g1.png",
+        "outputSizeKB": 2736
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 90020,
+        "errorMessage": "Timed out after 90s"
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-3.0",
+    "group": "gen",
+    "status": "partial",
+    "maxGarmentsAccepted": 1,
+    "avgElapsedMs": 72242,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 72242,
+        "outputFile": "qwen-image-3.0_g1.png",
+        "outputSizeKB": 2938
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 90027,
+        "errorMessage": "Timed out after 90s"
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-max",
+    "group": "gen",
+    "status": "failed",
+    "maxGarmentsAccepted": 0,
+    "avgElapsedMs": 0,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 2077,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"014dc8e5-9dad-9df0-abe3-52c8bf7196c4\",\"code\":\"InvalidParameter\",\"message\":\"content parameter's length invalid, please check the request parameters.\"}"
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image-plus",
+    "group": "gen",
+    "status": "failed",
+    "maxGarmentsAccepted": 0,
+    "avgElapsedMs": 0,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 2019,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"eee163c3-bb63-9689-99c9-8e6e01122f85\",\"code\":\"InvalidParameter\",\"message\":\"content parameter's length invalid, please check the request parameters.\"}"
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "qwen-image",
+    "group": "gen",
+    "status": "failed",
+    "maxGarmentsAccepted": 0,
+    "avgElapsedMs": 0,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 2309,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"577711bc-b594-9997-be7f-d16abae5eb82\",\"code\":\"InvalidParameter\",\"message\":\"content parameter's length invalid, please check the request parameters.\"}"
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "wan2.7-image-pro",
+    "group": "gen",
+    "status": "full",
+    "maxGarmentsAccepted": 5,
+    "avgElapsedMs": 17248,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 15470,
+        "outputFile": "wan2.7-image-pro_g1.png",
+        "outputSizeKB": 5273
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 18084,
+        "outputFile": "wan2.7-image-pro_g2.png",
+        "outputSizeKB": 4954
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 16394,
+        "outputFile": "wan2.7-image-pro_g3.png",
+        "outputSizeKB": 5067
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 17731,
+        "outputFile": "wan2.7-image-pro_g4.png",
+        "outputSizeKB": 5167
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 18563,
+        "outputFile": "wan2.7-image-pro_g5.png",
+        "outputSizeKB": 5068
+      }
+    }
+  },
+  {
+    "model": "wan2.7-image",
+    "group": "gen",
+    "status": "full",
+    "maxGarmentsAccepted": 5,
+    "avgElapsedMs": 14247,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 12798,
+        "outputFile": "wan2.7-image_g1.png",
+        "outputSizeKB": 4905
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 15078,
+        "outputFile": "wan2.7-image_g2.png",
+        "outputSizeKB": 4551
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 13775,
+        "outputFile": "wan2.7-image_g3.png",
+        "outputSizeKB": 5161
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 13284,
+        "outputFile": "wan2.7-image_g4.png",
+        "outputSizeKB": 5035
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": true,
+        "hasImage": true,
+        "elapsedMs": 16301,
+        "outputFile": "wan2.7-image_g5.png",
+        "outputSizeKB": 5044
+      }
+    }
+  },
+  {
+    "model": "z-image-turbo",
+    "group": "gen",
+    "status": "failed",
+    "maxGarmentsAccepted": 0,
+    "avgElapsedMs": 0,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 2195,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"f2e21c4d-54d8-965e-b37d-6f6c4f5b07bd\",\"code\":\"InvalidParameter\",\"message\":\"Field 'text' is required in content item.\"}"
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "wan2.1-t2i-turbo",
+    "group": "gen",
+    "status": "failed",
+    "maxGarmentsAccepted": 0,
+    "avgElapsedMs": 0,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 3122,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"3fb48ea6-944c-9702-ba2e-7ee2f54f836a\",\"code\":\"InvalidParameter\",\"message\":\"url error, please check url！ For details, see: https://www.alibabacloud.com/help/en/model-studio/error-code#error-url\"}"
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  },
+  {
+    "model": "wan2.1-t2i-plus",
+    "group": "gen",
+    "status": "failed",
+    "maxGarmentsAccepted": 0,
+    "avgElapsedMs": 0,
+    "tests": {
+      "1": {
+        "garmentCount": 1,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 3481,
+        "errorCode": 400,
+        "errorMessage": "{\"request_id\":\"58eb759b-56b3-934f-b95f-ed494fce9bb3\",\"code\":\"InvalidParameter\",\"message\":\"url error, please check url！ For details, see: https://www.alibabacloud.com/help/en/model-studio/error-code#error-url\"}"
+      },
+      "2": {
+        "garmentCount": 2,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "3": {
+        "garmentCount": 3,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "4": {
+        "garmentCount": 4,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      },
+      "5": {
+        "garmentCount": 5,
+        "accepted": false,
+        "hasImage": false,
+        "elapsedMs": 0,
+        "skipped": true
+      }
+    }
+  }
+]

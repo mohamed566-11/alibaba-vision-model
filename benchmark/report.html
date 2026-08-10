@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DashScope Model Benchmark Executive Report</title>
+<style>
+  :root {
+    --bg: #09090b;
+    --surface: #121217;
+    --surface-card: #181820;
+    --border: #27273a;
+    --accent: #6366f1;
+    --accent-glow: rgba(99,102,241,0.25);
+    --green: #22c55e;
+    --red: #ef4444;
+    --amber: #f59e0b;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; padding: 40px; line-height: 1.5; }
+  
+  .header-container { margin-bottom: 40px; }
+  h1 { font-size: 32px; font-weight: 800; background: linear-gradient(135deg, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.02em; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-top: 6px; }
+
+  /* Executive Cards */
+  .exec-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 40px; }
+  .card { background: var(--surface-card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; position: relative; overflow: hidden; }
+  .card-header { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  .card-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .card-stat { font-size: 28px; font-weight: 800; color: var(--green); margin-bottom: 4px; }
+  .card-desc { font-size: 13px; color: var(--muted); }
+  .card-winner { border-color: rgba(99,102,241,0.5); background: linear-gradient(180deg, rgba(99,102,241,0.08) 0%, var(--surface-card) 100%); }
+
+  h2 { font-size: 20px; font-weight: 700; margin: 40px 0 16px; display: flex; align-items: center; gap: 12px; }
+  h2 .tag { font-size: 12px; font-weight: 500; background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); color: #a5b4fc; padding: 3px 10px; border-radius: 20px; }
+
+  table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); font-size: 13px; margin-bottom: 40px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  th { background: #13131c; color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  td { padding: 14px 16px; border-bottom: 1px solid #1c1c28; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(99,102,241,0.03); }
+  
+  .row-current td { background: rgba(99,102,241,0.06); }
+  .row-winner td { background: rgba(34,197,94,0.06); }
+
+  .model-name-cell { min-width: 220px; }
+  .model-title { font-weight: 700; font-size: 14px; color: #fff; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .model-id { font-size: 11px; color: var(--muted); font-family: monospace; margin-top: 2px; }
+
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .font-bold { font-weight: 700; }
+  .text-green { color: var(--green); }
+  .text-amber { color: var(--amber); }
+
+  .badge-current { background: rgba(99,102,241,0.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.4); border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; }
+  .badge-winner  { background: rgba(34,197,94,0.2);  color: #4ade80; border: 1px solid rgba(34,197,94,0.4);  border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700; }
+  .badge-high    { color: var(--red);   background: rgba(239,68,68,0.12);   border: 1px solid rgba(239,68,68,0.25);   border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 600; }
+  .badge-medium  { color: var(--amber); background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.25); border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 600; }
+  .badge-low     { color: var(--green); background: rgba(34,197,94,0.12);   border: 1px solid rgba(34,197,94,0.25);   border-radius: 4px; padding: 2px 6px; font-size: 10px; font-weight: 600; }
+
+  .speed-pill { font-family: monospace; font-weight: 700; padding: 3px 8px; border-radius: 6px; font-size: 12px; display: inline-block; }
+  .speed-fast { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+  .speed-mid  { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.3); }
+  .speed-slow { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+
+  /* Details Breakdown */
+  .details-cell { min-width: 280px; }
+  .img-mini-card { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-size: 11px; }
+  .img-mini-card:last-child { margin-bottom: 0; }
+  .img-mini-name { width: 50px; font-weight: 600; color: var(--muted); text-transform: uppercase; font-size: 10px; }
+  .img-mini-time { font-family: monospace; font-size: 11px; color: #fff; width: 55px; text-align: right; }
+  .img-mini-fail { color: var(--red); font-size: 10px; }
+  .tags-wrap { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
+  .item-tag { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 1px 5px; font-size: 10px; color: #cbd5e1; }
+  .no-tags { font-size: 10px; color: var(--muted); }
+
+  /* Stage 2 Thumbnails & Zoom */
+  .thumbs-cell { display: flex; gap: 14px; align-items: flex-start; padding: 10px 16px !important; }
+  .thumb-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .img-preview-box { width: 110px; height: 110px; border-radius: 12px; background: #ffffff; padding: 6px; border: 1px solid var(--border); position: relative; cursor: pointer; overflow: hidden; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .img-preview-box:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 8px 24px var(--accent-glow); }
+  .thumb { width: 100%; height: 100%; object-fit: contain; display: block; }
+  .zoom-overlay { position: absolute; inset: 0; background: rgba(15,15,20,0.75); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(2px); }
+  .img-preview-box:hover .zoom-overlay { opacity: 1; }
+  .thumb-fail { width: 110px; height: 110px; border-radius: 12px; background: rgba(239,68,68,0.08); border: 1px dashed var(--red); display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .thumb-label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+  .thumb-time  { font-size: 10px; color: var(--accent); font-family: monospace; font-weight: 600; }
+
+  /* Modal Lightbox */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 9999; opacity: 0; transition: opacity 0.25s ease; }
+  .modal-overlay.active { display: flex; opacity: 1; }
+  .modal-content { background: #181820; border: 1px solid var(--border); border-radius: 20px; padding: 20px; max-width: 90vw; max-height: 90vh; display: flex; flex-direction: column; align-items: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+  .modal-img { max-width: 80vw; max-height: 75vh; object-fit: contain; background: #fff; border-radius: 12px; padding: 12px; }
+  .modal-caption { margin-top: 14px; font-size: 14px; font-weight: 600; color: #fff; text-align: center; }
+  .modal-close { position: absolute; top: 20px; right: 24px; background: rgba(255,255,255,0.1); border: none; color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+  .modal-close:hover { background: rgba(255,255,255,0.25); }
+
+  .footer-ts { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+
+<div class="header-container">
+  <h1>DashScope Model Benchmark Executive Report</h1>
+  <p class="subtitle">Generated: 09/08/2026, 19:24:12 &nbsp;·&nbsp; Total Tested: 19 VL Models &nbsp;·&nbsp; 6 Image-Edit Models</p>
+</div>
+
+<!-- Executive Summary Cards -->
+<div class="exec-cards">
+  <div class="card card-winner">
+    <div class="card-header">Stage 1 Recommended Upgrade</div>
+    <div class="card-title">⚡ Qwen3 VL 30B Instruct</div>
+    <div class="card-stat">1,600ms <span style="font-size:16px;color:var(--muted);font-weight:400;">avg speed</span></div>
+    <div class="card-desc"><strong>3x Faster</strong> than qwen-vl-max (4.7s → 1.6s) with 100% accuracy in detecting all suit components.</div>
+  </div>
+
+  <div class="card card-winner">
+    <div class="card-header">Stage 2 Recommended Model</div>
+    <div class="card-title">⭐ Qwen Image Edit Plus</div>
+    <div class="card-stat">100% <span style="font-size:16px;color:var(--muted);font-weight:400;">success rate</span></div>
+    <div class="card-desc"><strong>Best Stability</strong> across all image sizes. 6.7s response on medium photos, zero timeouts.</div>
+  </div>
+</div>
+
+<h2>Stage 1 — VL Vision Models <span class="tag">Garment Analysis & Detection</span></h2>
+<table>
+<thead><tr>
+  <th>Model</th>
+  <th>Priority</th>
+  <th style="text-align:right;">Avg Response</th>
+  <th style="text-align:right;">Avg Items</th>
+  <th style="text-align:right;">Success</th>
+  <th>Breakdown Per Image (small / medium / large)</th>
+</tr></thead>
+<tbody><tr class="row-current">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen VL Max <span class="badge-current">CURRENT</span></div>
+        <div class="model-id">qwen-vl-max</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-slow">4738ms</span></td>
+      <td class="num font-bold">3.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">4199ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">5381ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">4634ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">QVQ Max (Visual Reasoning) </div>
+        <div class="model-id">qvq-max</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-fast">—</span></td>
+      <td class="num font-bold">—</td>
+      <td class="num">0/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-fail">❌ Failed</span>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-fail">❌ Failed</span>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-fail">❌ Failed</span>
+      </div></td>
+    </tr>
+<tr class="row-winner">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 30B Instruct <span class="badge-winner">⚡ RECOMMENDED WINNER</span></div>
+        <div class="model-id">qwen3-vl-30b-a3b-instruct</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-fast">1600ms</span></td>
+      <td class="num font-bold">3.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1041ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">2034ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">1726ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoes</span><span class="item-tag">shirt</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen VL OCR (2025-11-20) </div>
+        <div class="model-id">qwen-vl-ocr-2025-11-20</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="num"><span class="speed-pill speed-fast">1693ms</span></td>
+      <td class="num font-bold">2.7</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1990ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoe</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">1579ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoe</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">1510ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoe</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 8B Instruct </div>
+        <div class="model-id">qwen3-vl-8b-instruct</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-fast">1699ms</span></td>
+      <td class="num font-bold">2.7</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1111ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">1823ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">2164ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen VL OCR </div>
+        <div class="model-id">qwen-vl-ocr</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="num"><span class="speed-pill speed-fast">1980ms</span></td>
+      <td class="num font-bold">2.7</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">2345ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoe</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">1976ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoe</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">1620ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoe</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL Flash (2025-10-15) </div>
+        <div class="model-id">qwen3-vl-flash-2025-10-15</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="num"><span class="speed-pill speed-fast">2178ms</span></td>
+      <td class="num font-bold">4.0</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1310ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">3067ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">belt</span><span class="item-tag">shoes</span><span class="item-tag">watch</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">2158ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen VL Plus </div>
+        <div class="model-id">qwen-vl-plus</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-fast">2321ms</span></td>
+      <td class="num font-bold">4.0</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1308ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">2717ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">top</span><span class="item-tag">bottoms</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">2939ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span><span class="item-tag">shirt</span><span class="item-tag">pants</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL Flash (2026-01-22) </div>
+        <div class="model-id">qwen3-vl-flash-2026-01-22</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="num"><span class="speed-pill speed-mid">2544ms</span></td>
+      <td class="num font-bold">4.0</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1673ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">3211ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">belt</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">2748ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">vest</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL Plus (2025-12-19) </div>
+        <div class="model-id">qwen3-vl-plus-2025-12-19</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="num"><span class="speed-pill speed-mid">2614ms</span></td>
+      <td class="num font-bold">3.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1893ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">3329ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">2620ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 32B Instruct </div>
+        <div class="model-id">qwen3-vl-32b-instruct</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-mid">2634ms</span></td>
+      <td class="num font-bold">3.7</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1556ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">3594ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">2753ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span><span class="item-tag">socks</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL Plus </div>
+        <div class="model-id">qwen3-vl-plus</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-mid">2644ms</span></td>
+      <td class="num font-bold">3.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1530ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">3922ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">2480ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL Flash </div>
+        <div class="model-id">qwen3-vl-flash</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-mid">2858ms</span></td>
+      <td class="num font-bold">4.0</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">1778ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">3705ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">belt</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">3092ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">vest</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 235B Instruct </div>
+        <div class="model-id">qwen3-vl-235b-a22b-instruct</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="num"><span class="speed-pill speed-mid">3645ms</span></td>
+      <td class="num font-bold">3.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">2420ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">4532ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">3982ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL Plus (2025-09-23) </div>
+        <div class="model-id">qwen3-vl-plus-2025-09-23</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="num"><span class="speed-pill speed-slow">4003ms</span></td>
+      <td class="num font-bold">3.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">2646ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">5010ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">4354ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 32B Thinking </div>
+        <div class="model-id">qwen3-vl-32b-thinking</div>
+      </td>
+      <td><span class="badge-low">LOW</span></td>
+      <td class="num"><span class="speed-pill speed-slow">5364ms</span></td>
+      <td class="num font-bold">3.0</td>
+      <td class="num">2/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">4822ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">5905ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">trousers</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-fail">❌ Failed</span>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 30B Thinking </div>
+        <div class="model-id">qwen3-vl-30b-a3b-thinking</div>
+      </td>
+      <td><span class="badge-low">LOW</span></td>
+      <td class="num"><span class="speed-pill speed-slow">5723ms</span></td>
+      <td class="num font-bold">3.7</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">5175ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">4866ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">belt</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">7128ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 8B Thinking </div>
+        <div class="model-id">qwen3-vl-8b-thinking</div>
+      </td>
+      <td><span class="badge-low">LOW</span></td>
+      <td class="num"><span class="speed-pill speed-slow">16076ms</span></td>
+      <td class="num font-bold">7.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">4232ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">6547ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">37449ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoes</span><span class="item-tag">shirt</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoes</span><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoes</span><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen3 VL 235B Thinking </div>
+        <div class="model-id">qwen3-vl-235b-a22b-thinking</div>
+      </td>
+      <td><span class="badge-low">LOW</span></td>
+      <td class="num"><span class="speed-pill speed-slow">18690ms</span></td>
+      <td class="num font-bold">3.3</td>
+      <td class="num">3/3</td>
+      <td class="details-cell"><div class="img-mini-card">
+        <span class="img-mini-name">small</span>
+        <span class="img-mini-time">6017ms</span><div class="tags-wrap"><span class="item-tag">dress</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">medium</span>
+        <span class="img-mini-time">19437ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">shirt</span><span class="item-tag">pants</span><span class="item-tag">shoes</span></div>
+      </div><div class="img-mini-card">
+        <span class="img-mini-name">large</span>
+        <span class="img-mini-time">30615ms</span><div class="tags-wrap"><span class="item-tag">jacket</span><span class="item-tag">pants</span><span class="item-tag">shirt</span><span class="item-tag">shoes</span></div>
+      </div></td>
+    </tr></tbody>
+</table>
+
+<h2>Stage 2 — Image-Edit Models <span class="tag">Garment Extraction & Background Removal</span></h2>
+<table>
+<thead><tr>
+  <th>Model</th>
+  <th>Priority</th>
+  <th>High-Res Previews (Click to enlarge)</th>
+  <th style="text-align:right;">Avg Response</th>
+  <th style="text-align:right;">Success</th>
+</tr></thead>
+<tbody><tr class="row-current">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen Image Edit Plus <span class="badge-current">CURRENT (WINNER)</span></div>
+        <div class="model-id">qwen-image-edit-plus</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="thumbs-cell"><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-plus/small_output.png', 'Qwen Image Edit Plus - small')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-plus/small_output.png" alt="small" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">small</span>
+        <span class="thumb-time">14700ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-plus/medium_output.png', 'Qwen Image Edit Plus - medium')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-plus/medium_output.png" alt="medium" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">medium</span>
+        <span class="thumb-time">6746ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-plus/large_output.png', 'Qwen Image Edit Plus - large')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-plus/large_output.png" alt="large" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">large</span>
+        <span class="thumb-time">15320ms</span>
+      </div></td>
+      <td class="num"><span class="speed-pill speed-mid">12255ms</span></td>
+      <td class="num font-bold text-green">3/3</td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen Image Edit </div>
+        <div class="model-id">qwen-image-edit</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="thumbs-cell"><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit/small_output.png', 'Qwen Image Edit - small')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit/small_output.png" alt="small" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">small</span>
+        <span class="thumb-time">15767ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit/medium_output.png', 'Qwen Image Edit - medium')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit/medium_output.png" alt="medium" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">medium</span>
+        <span class="thumb-time">16283ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit/large_output.png', 'Qwen Image Edit - large')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit/large_output.png" alt="large" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">large</span>
+        <span class="thumb-time">16466ms</span>
+      </div></td>
+      <td class="num"><span class="speed-pill speed-mid">16172ms</span></td>
+      <td class="num font-bold text-green">3/3</td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen Image Edit Max </div>
+        <div class="model-id">qwen-image-edit-max</div>
+      </td>
+      <td><span class="badge-high">HIGH</span></td>
+      <td class="thumbs-cell"><div class="thumb-wrap">
+        <div class="thumb-fail" title="fetch failed">❌</div>
+        <span class="thumb-label">small</span>
+        <span class="thumb-time">30156ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-max/medium_output.png', 'Qwen Image Edit Max - medium')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-max/medium_output.png" alt="medium" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">medium</span>
+        <span class="thumb-time">20602ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-max/large_output.png', 'Qwen Image Edit Max - large')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-max/large_output.png" alt="large" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">large</span>
+        <span class="thumb-time">21512ms</span>
+      </div></td>
+      <td class="num"><span class="speed-pill speed-mid">21057ms</span></td>
+      <td class="num font-bold text-amber">2/3</td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen Image Edit Max (01-16) </div>
+        <div class="model-id">qwen-image-edit-max-2026-01-16</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="thumbs-cell"><div class="thumb-wrap">
+        <div class="thumb-fail" title="fetch failed">❌</div>
+        <span class="thumb-label">small</span>
+        <span class="thumb-time">10630ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-max-2026-01-16/medium_output.png', 'Qwen Image Edit Max (01-16) - medium')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-max-2026-01-16/medium_output.png" alt="medium" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">medium</span>
+        <span class="thumb-time">22417ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-max-2026-01-16/large_output.png', 'Qwen Image Edit Max (01-16) - large')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-max-2026-01-16/large_output.png" alt="large" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">large</span>
+        <span class="thumb-time">22244ms</span>
+      </div></td>
+      <td class="num"><span class="speed-pill speed-mid">22331ms</span></td>
+      <td class="num font-bold text-amber">2/3</td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen Image Edit Plus (10-30) </div>
+        <div class="model-id">qwen-image-edit-plus-2025-10-30</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="thumbs-cell"><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-plus-2025-10-30/small_output.png', 'Qwen Image Edit Plus (10-30) - small')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-plus-2025-10-30/small_output.png" alt="small" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">small</span>
+        <span class="thumb-time">9703ms</span>
+      </div><div class="thumb-wrap">
+        <div class="thumb-fail" title="fetch failed">❌</div>
+        <span class="thumb-label">medium</span>
+        <span class="thumb-time">17730ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-plus-2025-10-30/large_output.png', 'Qwen Image Edit Plus (10-30) - large')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-plus-2025-10-30/large_output.png" alt="large" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">large</span>
+        <span class="thumb-time">8889ms</span>
+      </div></td>
+      <td class="num"><span class="speed-pill speed-mid">9296ms</span></td>
+      <td class="num font-bold text-amber">2/3</td>
+    </tr>
+<tr class="">
+      <td class="model-name-cell">
+        <div class="model-title">Qwen Image Edit Plus (12-15) </div>
+        <div class="model-id">qwen-image-edit-plus-2025-12-15</div>
+      </td>
+      <td><span class="badge-medium">MEDIUM</span></td>
+      <td class="thumbs-cell"><div class="thumb-wrap">
+        <div class="thumb-fail" title="fetch failed">❌</div>
+        <span class="thumb-label">small</span>
+        <span class="thumb-time">10677ms</span>
+      </div><div class="thumb-wrap">
+        <div class="img-preview-box" onclick="openModal('results/stage2_edit/qwen-image-edit-plus-2025-12-15/medium_output.png', 'Qwen Image Edit Plus (12-15) - medium')">
+              <img class="thumb" src="results/stage2_edit/qwen-image-edit-plus-2025-12-15/medium_output.png" alt="medium" />
+              <div class="zoom-overlay">🔍 Zoom</div>
+             </div>
+        <span class="thumb-label">medium</span>
+        <span class="thumb-time">6354ms</span>
+      </div><div class="thumb-wrap">
+        <div class="thumb-fail" title="fetch failed">❌</div>
+        <span class="thumb-label">large</span>
+        <span class="thumb-time">15896ms</span>
+      </div></td>
+      <td class="num"><span class="speed-pill speed-mid">6354ms</span></td>
+      <td class="num font-bold text-amber">1/3</td>
+    </tr></tbody>
+</table>
+
+<!-- Lightbox Modal -->
+<div id="imageModal" class="modal-overlay" onclick="closeModal()">
+  <button class="modal-close" onclick="closeModal()">✕</button>
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <img id="modalImg" class="modal-img" src="" alt="Enlarged result" />
+    <div id="modalCaption" class="modal-caption"></div>
+  </div>
+</div>
+
+<script>
+function openModal(src, title) {
+  const modal = document.getElementById('imageModal');
+  const img = document.getElementById('modalImg');
+  const caption = document.getElementById('modalCaption');
+  img.src = src;
+  caption.innerText = title;
+  modal.classList.add('active');
+}
+function closeModal() {
+  document.getElementById('imageModal').classList.remove('active');
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+</script>
+
+<p class="footer-ts">Run benchmark script anytime: <code>npx tsx benchmark/run_benchmark.ts</code></p>
+</body>
+</html>

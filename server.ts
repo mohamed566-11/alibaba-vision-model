@@ -188,6 +188,7 @@ app.post('/api/garment/tryon', (req, res, next) => {
     res.json({
       success: true,
       image_url: tryOnResult.publicUrl,
+      model_used: tryOnResult.modelUsed,
       message: 'Virtual try-on completed successfully!'
     });
 

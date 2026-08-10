@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Virtual Try-On Benchmark — Alta AI Fashion Suite</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #0f0f12;
+      color: #e2e2e8;
+      min-height: 100vh;
+    }
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      padding: 32px 40px;
+    }
+    .header h1 { font-size: 2rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header p { color: #94a3b8; margin-top: 8px; font-size: 0.9rem; }
+    .summary-bar {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      padding: 24px 40px;
+      background: #13131a;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .stat-card {
+      background: #1e1e2e;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 16px 24px;
+      min-width: 140px;
+      text-align: center;
+    }
+    .stat-card .num { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .stat-card .lbl { font-size: 0.75rem; color: #94a3b8; margin-top: 4px; }
+    .num-full    { color: #34d399; }
+    .num-partial { color: #fbbf24; }
+    .num-fail    { color: #f87171; }
+    .num-total   { color: #a78bfa; }
+    .num-dur     { color: #60a5fa; }
+    .content { padding: 32px 40px; }
+    .section-title { font-size: 1.2rem; font-weight: 700; color: #c4b5fd; margin-bottom: 16px; }
+    .table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    thead th {
+      background: #1e1e2e;
+      color: #94a3b8;
+      padding: 12px 16px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    thead th:first-child { text-align: left; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+    tbody tr:hover { background: rgba(255,255,255,0.03); }
+    tbody td { padding: 12px 16px; vertical-align: middle; text-align: center; }
+    tbody td:first-child { text-align: left; }
+    .col-model { min-width: 260px; }
+    .model-name { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #e2e8f0; font-weight: 600; }
+    .model-label { font-size: 0.72rem; color: #64748b; margin-top: 2px; }
+    .col-status { min-width: 100px; }
+    .col-max { width: 70px; }
+    .col-speed { width: 70px; color: #94a3b8; font-size: 0.78rem; }
+    .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; display: inline-block; }
+    .badge-full    { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+    .badge-partial { background: rgba(251,191,36,0.15);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .badge-fail    { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+    .tag { display: inline-block; font-size: 0.65rem; padding: 2px 7px; border-radius: 4px; margin: 2px 2px 0 0; font-weight: 600; }
+    .tag-current  { background: rgba(167,139,250,0.2); color: #a78bfa; }
+    .tag-verified { background: rgba(251,146,60,0.2);  color: #fb923c; }
+    .tag-gen      { background: rgba(96,165,250,0.2);  color: #60a5fa; }
+    .cell-ok   { background: rgba(52,211,153,0.05); }
+    .cell-warn { background: rgba(251,191,36,0.05); }
+    .cell-fail { background: rgba(248,113,113,0.05); color: #f87171; }
+    .cell-skip { color: #475569; }
+    .cell-na   { color: #334155; }
+    .row-full    td { border-left: 2px solid transparent; }
+    .row-full    td:first-child { border-left: 2px solid #34d399; }
+    .row-partial td:first-child { border-left: 2px solid #fbbf24; }
+    .row-failed  td:first-child { border-left: 2px solid #f87171; }
+    .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 16px; font-size: 0.78rem; color: #64748b; }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .footer { text-align: center; padding: 24px; color: #334155; font-size: 0.75rem; border-top: 1px solid rgba(255,255,255,0.04); margin-top: 32px; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎭 Virtual Try-On Benchmark</h1>
+  <p>Alta AI Fashion Suite — DashScope Model Comparison | 10 Aug 2026 | Duration: 26 min</p>
+</div>
+
+<div class="summary-bar">
+  <div class="stat-card"><div class="num num-total">21</div><div class="lbl">Models Tested</div></div>
+  <div class="stat-card"><div class="num num-full">2</div><div class="lbl">Full (all levels passed)</div></div>
+  <div class="stat-card"><div class="num num-partial">13</div><div class="lbl">Partial (some levels)</div></div>
+  <div class="stat-card"><div class="num num-fail">6</div><div class="lbl">Failed (rejected)</div></div>
+  <div class="stat-card"><div class="num num-dur">26m</div><div class="lbl">Total Run Time</div></div>
+</div>
+
+<div class="content">
+  <div class="section-title">📊 Results — Sorted by Max Garments Accepted, then Speed</div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">Model</th>
+          <th>Status</th>
+          <th>Max G</th>
+          <th>Avg Speed</th>
+          <th>G1<br><small>1 garment</small></th><th>G2<br><small>2 garments</small></th><th>G3<br><small>3 garments</small></th><th>G4<br><small>4 garments</small></th><th>G5<br><small>5 garments</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        
+      <tr class="row-full">
+        <td class="col-model">
+          <div class="model-name">wan2.7-image</div>
+          <div class="model-label">Wan2.7 Image</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-full">✅ Full</span></td>
+        <td class="col-max"><strong>5</strong></td>
+        <td class="col-speed">14.2s</td>
+        <td class="cell-ok">✅<br><small>12.8s</small><a href="results/tryon/wan2.7-image_g1.png" target="_blank"><img src="results/tryon/wan2.7-image_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>15.1s</small><a href="results/tryon/wan2.7-image_g2.png" target="_blank"><img src="results/tryon/wan2.7-image_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>13.8s</small><a href="results/tryon/wan2.7-image_g3.png" target="_blank"><img src="results/tryon/wan2.7-image_g3.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>13.3s</small><a href="results/tryon/wan2.7-image_g4.png" target="_blank"><img src="results/tryon/wan2.7-image_g4.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>16.3s</small><a href="results/tryon/wan2.7-image_g5.png" target="_blank"><img src="results/tryon/wan2.7-image_g5.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td>
+      </tr>
+      <tr class="row-full">
+        <td class="col-model">
+          <div class="model-name">wan2.7-image-pro</div>
+          <div class="model-label">Wan2.7 Image Pro</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-full">✅ Full</span></td>
+        <td class="col-max"><strong>5</strong></td>
+        <td class="col-speed">17.2s</td>
+        <td class="cell-ok">✅<br><small>15.5s</small><a href="results/tryon/wan2.7-image-pro_g1.png" target="_blank"><img src="results/tryon/wan2.7-image-pro_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>18.1s</small><a href="results/tryon/wan2.7-image-pro_g2.png" target="_blank"><img src="results/tryon/wan2.7-image-pro_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>16.4s</small><a href="results/tryon/wan2.7-image-pro_g3.png" target="_blank"><img src="results/tryon/wan2.7-image-pro_g3.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>17.7s</small><a href="results/tryon/wan2.7-image-pro_g4.png" target="_blank"><img src="results/tryon/wan2.7-image-pro_g4.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>18.6s</small><a href="results/tryon/wan2.7-image-pro_g5.png" target="_blank"><img src="results/tryon/wan2.7-image-pro_g5.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-2.0-2026-03-03</div>
+          <div class="model-label">Image 2.0 (03-03)</div>
+          <span class="tag tag-verified">🔥 Verified</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">7.7s</td>
+        <td class="cell-ok">✅<br><small>6.4s</small><a href="results/tryon/qwen-image-2.0-2026-03-03_g1.png" target="_blank"><img src="results/tryon/qwen-image-2.0-2026-03-03_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>9.0s</small><a href="results/tryon/qwen-image-2.0-2026-03-03_g2.png" target="_blank"><img src="results/tryon/qwen-image-2.0-2026-03-03_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-edit-plus-2025-12-15</div>
+          <div class="model-label">Image Edit Plus (12-15)</div>
+          
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">10.9s</td>
+        <td class="cell-ok">✅<br><small>9.1s</small><a href="results/tryon/qwen-image-edit-plus-2025-12-15_g1.png" target="_blank"><img src="results/tryon/qwen-image-edit-plus-2025-12-15_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>12.7s</small><a href="results/tryon/qwen-image-edit-plus-2025-12-15_g2.png" target="_blank"><img src="results/tryon/qwen-image-edit-plus-2025-12-15_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-edit-plus</div>
+          <div class="model-label">Image Edit Plus</div>
+          <span class="tag tag-current">⭐ Current</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">15.9s</td>
+        <td class="cell-ok">✅<br><small>13.2s</small><a href="results/tryon/qwen-image-edit-plus_g1.png" target="_blank"><img src="results/tryon/qwen-image-edit-plus_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>18.7s</small><a href="results/tryon/qwen-image-edit-plus_g2.png" target="_blank"><img src="results/tryon/qwen-image-edit-plus_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-edit-plus-2025-10-30</div>
+          <div class="model-label">Image Edit Plus (10-30)</div>
+          
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">16.6s</td>
+        <td class="cell-ok">✅<br><small>11.8s</small><a href="results/tryon/qwen-image-edit-plus-2025-10-30_g1.png" target="_blank"><img src="results/tryon/qwen-image-edit-plus-2025-10-30_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>21.3s</small><a href="results/tryon/qwen-image-edit-plus-2025-10-30_g2.png" target="_blank"><img src="results/tryon/qwen-image-edit-plus-2025-10-30_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-2.0-pro-2026-04-22</div>
+          <div class="model-label">Image 2.0 Pro (04-22)</div>
+          <span class="tag tag-verified">🔥 Verified</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">22.2s</td>
+        <td class="cell-ok">✅<br><small>13.3s</small><a href="results/tryon/qwen-image-2.0-pro-2026-04-22_g1.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro-2026-04-22_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>31.0s</small><a href="results/tryon/qwen-image-2.0-pro-2026-04-22_g2.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro-2026-04-22_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-2.0-pro-2026-06-22</div>
+          <div class="model-label">Image 2.0 Pro (06-22)</div>
+          <span class="tag tag-verified">🔥 Verified</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">26.4s</td>
+        <td class="cell-ok">✅<br><small>22.2s</small><a href="results/tryon/qwen-image-2.0-pro-2026-06-22_g1.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro-2026-06-22_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>30.6s</small><a href="results/tryon/qwen-image-2.0-pro-2026-06-22_g2.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro-2026-06-22_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-2.0-pro-2026-03-03</div>
+          <div class="model-label">Image 2.0 Pro (03-03)</div>
+          <span class="tag tag-verified">🔥 Verified</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">27.1s</td>
+        <td class="cell-ok">✅<br><small>23.1s</small><a href="results/tryon/qwen-image-2.0-pro-2026-03-03_g1.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro-2026-03-03_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>31.1s</small><a href="results/tryon/qwen-image-2.0-pro-2026-03-03_g2.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro-2026-03-03_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-edit</div>
+          <div class="model-label">Image Edit</div>
+          
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">30.8s</td>
+        <td class="cell-ok">✅<br><small>25.8s</small><a href="results/tryon/qwen-image-edit_g1.png" target="_blank"><img src="results/tryon/qwen-image-edit_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>35.8s</small><a href="results/tryon/qwen-image-edit_g2.png" target="_blank"><img src="results/tryon/qwen-image-edit_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-2.0-pro</div>
+          <div class="model-label">Image 2.0 Pro</div>
+          <span class="tag tag-verified">🔥 Verified</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">30.9s</td>
+        <td class="cell-ok">✅<br><small>29.2s</small><a href="results/tryon/qwen-image-2.0-pro_g1.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>32.7s</small><a href="results/tryon/qwen-image-2.0-pro_g2.png" target="_blank"><img src="results/tryon/qwen-image-2.0-pro_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-edit-max</div>
+          <div class="model-label">Image Edit Max</div>
+          
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">43.5s</td>
+        <td class="cell-ok">✅<br><small>36.0s</small><a href="results/tryon/qwen-image-edit-max_g1.png" target="_blank"><img src="results/tryon/qwen-image-edit-max_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>51.0s</small><a href="results/tryon/qwen-image-edit-max_g2.png" target="_blank"><img src="results/tryon/qwen-image-edit-max_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-edit-max-2026-01-16</div>
+          <div class="model-label">Image Edit Max (01-16)</div>
+          
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>2</strong></td>
+        <td class="col-speed">47.6s</td>
+        <td class="cell-ok">✅<br><small>45.8s</small><a href="results/tryon/qwen-image-edit-max-2026-01-16_g1.png" target="_blank"><img src="results/tryon/qwen-image-edit-max-2026-01-16_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-ok">✅<br><small>49.5s</small><a href="results/tryon/qwen-image-edit-max-2026-01-16_g2.png" target="_blank"><img src="results/tryon/qwen-image-edit-max-2026-01-16_g2.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-3.0</div>
+          <div class="model-label">Image 3.0</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>1</strong></td>
+        <td class="col-speed">72.2s</td>
+        <td class="cell-ok">✅<br><small>72.2s</small><a href="results/tryon/qwen-image-3.0_g1.png" target="_blank"><img src="results/tryon/qwen-image-3.0_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>err</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-partial">
+        <td class="col-model">
+          <div class="model-name">qwen-image-3.0-pro</div>
+          <div class="model-label">Image 3.0 Pro</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-partial">⚠️ Partial</span></td>
+        <td class="col-max"><strong>1</strong></td>
+        <td class="col-speed">80.8s</td>
+        <td class="cell-ok">✅<br><small>80.8s</small><a href="results/tryon/qwen-image-3.0-pro_g1.png" target="_blank"><img src="results/tryon/qwen-image-3.0-pro_g1.png" alt="output" style="max-width:60px;max-height:80px;border-radius:4px;margin-top:4px;display:block;"></a></td><td class="cell-fail">❌<br><small>err</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-failed">
+        <td class="col-model">
+          <div class="model-name">qwen-image-max</div>
+          <div class="model-label">Image Max</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-fail">❌ Failed</span></td>
+        <td class="col-max"><strong>—</strong></td>
+        <td class="col-speed">—</td>
+        <td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-failed">
+        <td class="col-model">
+          <div class="model-name">qwen-image-plus</div>
+          <div class="model-label">Image Plus</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-fail">❌ Failed</span></td>
+        <td class="col-max"><strong>—</strong></td>
+        <td class="col-speed">—</td>
+        <td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-failed">
+        <td class="col-model">
+          <div class="model-name">qwen-image</div>
+          <div class="model-label">Image</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-fail">❌ Failed</span></td>
+        <td class="col-max"><strong>—</strong></td>
+        <td class="col-speed">—</td>
+        <td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-failed">
+        <td class="col-model">
+          <div class="model-name">z-image-turbo</div>
+          <div class="model-label">Z-Image Turbo</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-fail">❌ Failed</span></td>
+        <td class="col-max"><strong>—</strong></td>
+        <td class="col-speed">—</td>
+        <td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-failed">
+        <td class="col-model">
+          <div class="model-name">wan2.1-t2i-turbo</div>
+          <div class="model-label">Wan2.1 T2I Turbo</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-fail">❌ Failed</span></td>
+        <td class="col-max"><strong>—</strong></td>
+        <td class="col-speed">—</td>
+        <td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      <tr class="row-failed">
+        <td class="col-model">
+          <div class="model-name">wan2.1-t2i-plus</div>
+          <div class="model-label">Wan2.1 T2I Plus</div>
+          <span class="tag tag-gen">🎨 Gen</span>
+        </td>
+        <td class="col-status"><span class="badge badge-fail">❌ Failed</span></td>
+        <td class="col-max"><strong>—</strong></td>
+        <td class="col-speed">—</td>
+        <td class="cell-fail">❌<br><small>400</small></td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td><td class="cell-skip">⏭</td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="legend">
+    <span>✅ = accepted & has image output</span>
+    <span>⚠️ = HTTP 200 but no image URL</span>
+    <span>❌ = API error / rejected</span>
+    <span>⏭ = skipped (prev level failed)</span>
+    <span>G1–G5 = garment count sent as input</span>
+    <span>Max G = highest garment count that succeeded</span>
+  </div>
+</div>
+
+<div class="footer">
+  Generated by Alta AI Fashion Suite Try-On Benchmark • 2026-08-10T10:22:55.188Z
+</div>
+
+</body>
+</html>

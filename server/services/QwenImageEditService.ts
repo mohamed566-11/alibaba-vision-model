@@ -8,11 +8,15 @@ import { v4 as uuidv4 } from 'uuid';
 export class QwenImageEditService {
   private static DASHSCOPE_URL = 'https://dashscope-intl.aliyuncs.com/api/v1/services/aigc/multimodal-generation/generation';
 
-  // 512px = ~70KB base64 - fast enough for vision inference without quality loss on garments
+  // 512px = ~70KB base64 - fast enough for garment extraction (Stage 1 & 2)
   private static MAX_INPUT_PX = 512;
+
+  // 768px = ~150KB base64 - higher fidelity for Virtual Try-On (person face + garment detail)
+  private static MAX_INPUT_PX_HQ = 768;
 
   /**
    * Compresses and resizes input image for fast API payload transfer.
+   * Used by: Garment extraction pipeline (Stage 2)
    */
   public static async compressInputImage(inputFilePath: string): Promise<{ base64: string; mime: string }> {
     const compressed = await sharp(inputFilePath)
@@ -21,6 +25,25 @@ export class QwenImageEditService {
         withoutEnlargement: true
       })
       .jpeg({ quality: 65, progressive: true })
+      .toBuffer();
+    return {
+      base64: `data:image/jpeg;base64,${compressed.toString('base64')}`,
+      mime: 'image/jpeg'
+    };
+  }
+
+  /**
+   * High-quality compression for Virtual Try-On inputs.
+   * Uses 768px / quality 80 to preserve face identity, skin tone and garment texture.
+   * Used by: GarmentTryOnService
+   */
+  public static async compressInputImageHQ(inputFilePath: string): Promise<{ base64: string; mime: string }> {
+    const compressed = await sharp(inputFilePath)
+      .resize(QwenImageEditService.MAX_INPUT_PX_HQ, QwenImageEditService.MAX_INPUT_PX_HQ, {
+        fit: 'inside',
+        withoutEnlargement: true
+      })
+      .jpeg({ quality: 80, progressive: true })
       .toBuffer();
     return {
       base64: `data:image/jpeg;base64,${compressed.toString('base64')}`,
